@@ -1,25 +1,19 @@
 <template>
   <div>
-    <x-header>with right link<a slot="right">Feedback</a></x-header>
-    <video-player  class="video-player-box"
+    <x-header>with right link<a slot="right" @click="refresh">刷新</a></x-header>
+    <div class="wrapper" v-for="(item, index) in options" :key="index">
+      <video-player class="video-player-box"
                  ref="videoPlayer"
-                 :options="playerOptions"
+                 :options="item"
                  :playsinline="true"
-                 customEventName="customstatechangedeventname"
-
-                 @play="onPlayerPlay($event)"
-                 @pause="onPlayerPause($event)"
-                 @ended="onPlayerEnded($event)"
-                 @waiting="onPlayerWaiting($event)"
-                 @playing="onPlayerPlaying($event)"
-                 @loadeddata="onPlayerLoadeddata($event)"
-                 @timeupdate="onPlayerTimeupdate($event)"
                  @canplay="onPlayerCanplay($event)"
-                 @canplaythrough="onPlayerCanplaythrough($event)"
+                >
+      </video-player>
+      <p>{{item.__desc}}</p>
+      <p>{{item.__nickname}}</p>
+      <p>{{item.__share_url}}</p>
+    </div>
 
-                 @statechanged="playerStateChanged($event)"
-                 @ready="playerReadied">
-  </video-player>
   </div>
 
 </template>
@@ -30,6 +24,30 @@ import { XHeader } from "vux";
 // eslint-disable-next-line
 import "video.js/dist/video-js.css";
 import { videoPlayer } from "vue-video-player";
+import axios from "axios";
+import jsonp from "jsonp";
+
+const playerOptions = {
+  height: 580,
+  muted: false, // 静音
+  language: "zh-CN",
+};
+// {`
+//         // videojs options
+//         height: 580,
+//         width: window.app.width,
+//         muted: true,
+//         language: "en",
+//         // playbackRates: [0.7, , 1.5, 2.0],
+//         sources: [
+//           {
+//             type: "video/mp4",
+//             src:
+//               "https://api.amemv.com/aweme/v1/play/?video_id=v0200f490000bbq1mkcm7fi9ml8eh8cg&line=0&ratio=720p&media_type=4&vr_type=0&test_cdn=None&improve_bitrate=0"
+//           }
+//         ],
+//         poster: "/static/images/author.jpg"
+//       }`
 
 export default {
   components: {
@@ -38,70 +56,62 @@ export default {
   },
   data() {
     return {
-      playerOptions: {
-        // videojs options
-        muted: true,
-        language: "en",
-        playbackRates: [0.7, 1.0, 1.5, 2.0],
-        sources: [
-          {
-            type: "video/mp4",
-            src:
-              "https://api.amemv.com/aweme/v1/play/?video_id=v0200f490000bbq1mkcm7fi9ml8eh8cg&line=0&ratio=720p&media_type=4&vr_type=0&test_cdn=None&improve_bitrate=0"
-          }
-        ],
-        poster: "/static/images/author.jpg"
-      }
+      options: [],
     };
   },
   mounted() {
-    console.log("this is current player instance object", this.player);
-  },
-  computed: {
-    player() {
-      return this.$refs.videoPlayer.player;
-    }
+    this.load();
   },
   methods: {
-    // listen event
-    onPlayerPlay(player) {
-      // console.log('player play!', player)
+    load() {
+      // axios.get('https://json2jsonp.com/?url=https://cj.huitaodang.com/api/douyin/recommend/&callback=callback').then((res) => {
+      //   console.log(res);
+      // }).catch((err) => {
+      //   alert(err);
+      // });
+
+      const url1 = `https://cj.huitaodang.com/api/douyin/recommend/?t=${Date.now()}`;
+      const url2 = `https://json2jsonp.com/?url=${url1}`;
+
+      jsonp(url2, null, (err, data) => {
+        if (err) {
+          console.error(err.message);
+        } else {
+          console.log(data);
+          if (data.aweme_list && data.aweme_list.length) {
+            this.options = data.aweme_list.map((obj) => Object.assign({}, playerOptions, {
+              width: window.app.width,
+              sources: [{
+                type: 'video/mp4',
+                src: obj.video.play_addr.url_list[0]
+              }],
+              poster: obj.video_img,
+              __desc: obj.desc,
+              __nickname: obj.nickname,
+              __share_url: obj.share_url,
+            }));
+          }
+        }
+      });
     },
-    onPlayerPause(player) {
-      // console.log('player pause!', player)
+
+    refresh() {
+      this.options = [];
+      this.load();
     },
-    onPlayerEnded(player) {
-      // console.log('player ended!', player)
-    },
-    onPlayerLoadeddata(player) {
-      // console.log('player Loadeddata!', player)
-    },
-    onPlayerWaiting(player) {
-      // console.log('player Waiting!', player)
-    },
-    onPlayerPlaying(player) {
-      // console.log('player Playing!', player)
-    },
-    onPlayerTimeupdate(player) {
-      // console.log('player Timeupdate!', player.currentTime())
-    },
+
     onPlayerCanplay(player) {
-      // console.log('player Canplay!', player)
+      console.log('112233');
     },
-    onPlayerCanplaythrough(player) {
-      // console.log('player Canplaythrough!', player)
-    },
-    // or listen state event
-    playerStateChanged(playerCurrentState) {
-      // console.log('player current update state', playerCurrentState)
-    },
-    // player is ready
-    playerReadied(player) {
-      // seek to 10s
-      console.log("example player 1 readied", player);
-      player.currentTime(10);
-      // console.log('example 01: the player is readied', player)
-    }
   }
 };
 </script>
+
+<style scoped>
+.wrapper {
+  margin-bottom: 50px;
+}
+p {
+  word-break: break-all;
+}
+</style>

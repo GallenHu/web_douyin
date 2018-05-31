@@ -25,6 +25,10 @@ FastClick.attach(document.body);
 
 Vue.config.productionTip = false;
 
+window.app = {
+  width: document.documentElement.clientWidth,
+};
+
 /* eslint-disable no-new */
 new Vue({
   router,
