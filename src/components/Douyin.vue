@@ -1,6 +1,6 @@
 <template>
   <div>
-    <x-header>with right link<a slot="right" @click="refresh">刷新</a></x-header>
+    <x-header>抖音Web版<a slot="right" @click="refresh">刷新</a></x-header>
     <div class="wrapper" v-for="(item, index) in options" :key="index">
       <video-player class="video-player-box"
                  ref="videoPlayer"
