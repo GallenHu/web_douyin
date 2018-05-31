@@ -9,9 +9,9 @@
                  @canplay="onPlayerCanplay($event)"
                 >
       </video-player>
-      <p>{{item.__desc}}</p>
-      <p>{{item.__nickname}}</p>
-      <p>{{item.__share_url}}</p>
+      <p>标题：{{item.__desc}}</p>
+      <p>用户：{{item.__nickname}}</p>
+      <p>分享：{{item.__share_url}}</p>
     </div>
 
   </div>
@@ -31,6 +31,7 @@ const playerOptions = {
   height: 580,
   muted: false, // 静音
   language: "zh-CN",
+  fluid: false,
 };
 // {`
 //         // videojs options
@@ -101,11 +102,40 @@ export default {
     },
 
     onPlayerCanplay(player) {
-      console.log('112233');
+
+      // Remove controls from the player on iPad to stop native controls from stealing
+      // our click
+      var contentPlayer =  document.getElementById('content_video_html5_api');
+      if ((navigator.userAgent.match(/iPad/i) ||
+            navigator.userAgent.match(/Safari/i)||
+            navigator.userAgent.match(/Android/i)) &&
+          contentPlayer.hasAttribute('controls')) {
+        contentPlayer.removeAttribute('controls');
+      }
+
+      // Initialize the ad container when the video player is clicked, but only the
+      // first time it's clicked.
+      // var startEvent = 'click';
+      // if (navigator.userAgent.match(/iPhone/i) ||
+      //     navigator.userAgent.match(/iPad/i) ||
+      //     navigator.userAgent.match(/Android/i)) {
+      //   startEvent = 'touchend';
+      // }
+
+      player.bigPlayButton.one('click', function () {
+        player.enterFullScreen();
+      });
     },
   }
 };
 </script>
+
+<style>
+.vjs-control-bar button {
+  transform: scale(2) !important;
+}
+</style>
+
 
 <style scoped>
 .wrapper {
@@ -113,5 +143,6 @@ export default {
 }
 p {
   word-break: break-all;
+  color: #ddd;
 }
 </style>
