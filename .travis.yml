@@ -1,0 +1,19 @@
+language: node_js
+node_js: v8.9.4
+
+before_install:
+  - git clone https://github.com/GallenHu/web_douyin.git
+install:
+  - yarn
+script:
+  - npm run build
+
+after_success:
+  - git config --global user.name "Gallen.Hu"
+  - git config --global user.email "gallenhu@foxmail.com"
+  - cd ./dist
+  - git init
+  - git add -A
+  - git commit -m "Travis CI Auto Builder"
+  - git checkout -b gh-pages
+  - git push --force -u https://${REPO_TOKEN}@github.com/GallenHu/web_douyin.git gh-pages
