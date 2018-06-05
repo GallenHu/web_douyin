@@ -11,6 +11,7 @@ script:
 after_success:
   - git config --global user.name "Gallen.Hu"
   - git config --global user.email "gallenhu@foxmail.com"
+  - cp -f ./CNAME ./dist
   - cd ./dist
   - git init
   - git add -A
