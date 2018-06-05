@@ -1,6 +1,6 @@
 <template>
   <div>
-    <x-header>抖音Web版<a slot="right" @click="refresh">刷新</a></x-header>
+    <x-header :left-options="leftOptions" class="header" @on-click-back="onBackClick">{{source === 1?'抖音' : '快手'}}Web版<a slot="right" @click="refresh">刷新</a></x-header>
     <div class="wrapper" v-for="(item, index) in options" :key="index">
       <video-player class="video-player-box"
                  ref="videoPlayer"
@@ -58,6 +58,11 @@ export default {
   data() {
     return {
       options: [],
+      leftOptions: {
+        backText: '切换',
+        preventGoBack: true,
+      },
+      source: 1, // 1抖音 2快手
     };
   },
   mounted() {
@@ -65,20 +70,23 @@ export default {
   },
   methods: {
     load() {
-      // axios.get('https://json2jsonp.com/?url=https://cj.huitaodang.com/api/douyin/recommend/&callback=callback').then((res) => {
-      //   console.log(res);
-      // }).catch((err) => {
-      //   alert(err);
-      // });
-
-      const url1 = `https://cj.huitaodang.com/api/douyin/recommend/?t=${Date.now()}`;
-      const url2 = `https://json2jsonp.com/?url=${url1}`;
+      const url1 = this.source === 1 ?
+        `https://cj.huitaodang.com/api/douyin/recommend/?t=${Date.now()}` :
+        `https://cj.huitaodang.com/api/kuaishou/recommend/?t=${Date.now()}`;
+      const url2 = `https://jsonp.afeld.me/?url=${url1}`;
 
       jsonp(url2, null, (err, data) => {
         if (err) {
           console.error(err.message);
         } else {
           console.log(data);
+          function scrollTop(){
+              var docScrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+              if(docScrollTop != 0){
+                  document.body.scrollTop = document.documentElement.scrollTop = 0;
+              }
+          }
+
           if (data.aweme_list && data.aweme_list.length) {
             this.options = data.aweme_list.map((obj) => Object.assign({}, playerOptions, {
               width: window.app.width,
@@ -89,8 +97,10 @@ export default {
               poster: obj.video_img,
               __desc: obj.desc,
               __nickname: obj.nickname,
-              __share_url: obj.share_url,
+              __share_url: obj.share_url || '',
             }));
+
+            scrollTop();
           }
         }
       });
@@ -109,6 +119,7 @@ export default {
       if ((navigator.userAgent.match(/iPad/i) ||
             navigator.userAgent.match(/Safari/i)||
             navigator.userAgent.match(/Android/i)) &&
+            contentPlayer &&
           contentPlayer.hasAttribute('controls')) {
         contentPlayer.removeAttribute('controls');
       }
@@ -126,6 +137,11 @@ export default {
         player.enterFullScreen();
       });
     },
+
+    onBackClick() {
+      this.source = this.source === 1 ? 2 : 1;
+      this.refresh();
+    },
   }
 };
 </script>
@@ -138,8 +154,15 @@ export default {
 
 
 <style scoped>
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 999;
+}
 .wrapper {
   margin-bottom: 50px;
+  margin-top: 46px;
 }
 p {
   word-break: break-all;
